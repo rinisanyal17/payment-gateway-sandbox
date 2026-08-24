@@ -5,12 +5,21 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
+# Create virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY app/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+
+# Install dependencies, then completely purge build toolchains
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip uninstall -y pip setuptools wheel && \
+    find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
+    rm -rf /opt/venv/lib/python3.11/site-packages/setuptools* \
+           /opt/venv/lib/python3.11/site-packages/pkg_resources* \
+           /opt/venv/lib/python3.11/site-packages/wheel* \
+           /opt/venv/lib/python3.11/site-packages/pip*
 
 # -------------------------------------------------------------
 # Stage 2: Hardened Zero-CVE Non-Root Runtime
@@ -24,13 +33,11 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Strip unneeded system build tools and metadata from the base image
-RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools* \
-           /usr/local/lib/python3.11/site-packages/wheel* \
-           /usr/local/lib/python3.11/site-packages/pip* \
-           /usr/local/lib/python3.11/site-packages/msgpack*
+# Clean all system-level site-packages from base image
+RUN rm -rf /usr/local/lib/python3.11/site-packages/* \
+           /usr/lib/python3/dist-packages/msgpack* 2>/dev/null || true
 
-# Copy isolated virtual environment from builder stage
+# Copy clean, build-tool-free virtual environment
 COPY --from=builder /opt/venv /opt/venv
 COPY app/ /app/
 
