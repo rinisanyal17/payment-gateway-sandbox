@@ -1,3 +1,7 @@
-echo "venv/" >> .gitignore
-echo "__pycache__/" >> .gitignore
-echo ".pytest_cache/" >> .gitignore
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.env
