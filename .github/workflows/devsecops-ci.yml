@@ -8,7 +8,6 @@ on:
 
 jobs:
   secret-scan:
-    name: Shift-Left Secret Detection (Gitleaks)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -16,10 +15,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks Scanner
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download and Run Gitleaks
+        run: |
+          wget -q https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
+          tar -xzf gitleaks_8.24.3_linux_x64.tar.gz
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks detect --source . --verbose
 
   lint-and-test:
     name: Code Quality & Unit Testing
