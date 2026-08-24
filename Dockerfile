@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY app/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+RUN pip install --no-cache-dir --upgrade pip "setuptools>=78.1.1" wheel "msgpack>=1.2.1" && \
     pip install --no-cache-dir --user -r requirements.txt
 
 # -------------------------------------------------------------
@@ -21,14 +21,14 @@ FROM python:3.11-slim AS runner
 
 WORKDIR /app
 
-# Apply available security patches to OS packages and clean apt cache
+# Apply available OS security updates
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade bundled Python toolchains to patch CVE-2026-24049
-RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+# Upgrade runtime Python toolchains to patched versions
+RUN python -m pip install --no-cache-dir --upgrade pip "setuptools>=78.1.1" wheel "msgpack>=1.2.1"
 
 # Create non-root system group and user
 RUN groupadd -g 10001 appgroup && \
