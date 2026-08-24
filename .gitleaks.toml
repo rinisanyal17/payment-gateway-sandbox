@@ -1,0 +1,9 @@
+[title]
+description = "Gitleaks configuration for Payment Sandbox"
+
+[[rules]]
+description = "Generic API Secret Token"
+id = "generic-api-key"
+regex = '''(?i)(?:key|api|secret|token|password)[^\n]{0,20}['"][0-9a-zA-Z]{16,45}['"]'''
+entropy = 3.5
+keywords = ["key", "api", "secret", "token", "password"]
