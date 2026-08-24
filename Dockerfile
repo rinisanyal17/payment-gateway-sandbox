@@ -11,20 +11,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY app/requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --user -r requirements.txt
 
 # -------------------------------------------------------------
-# Stage 2: Final Secure Non-Root Runtime
+# Stage 2: Hardened Secure Non-Root Runtime
 # -------------------------------------------------------------
 FROM python:3.11-slim AS runner
 
 WORKDIR /app
 
+# Apply available security patches to OS packages and clean apt cache
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Upgrade bundled Python toolchains to patch CVE-2026-24049
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Create non-root system group and user
 RUN groupadd -g 10001 appgroup && \
     useradd -u 10001 -g appgroup -s /sbin/nologin -M appuser
 
-# Copy installed Python packages from builder stage
+# Copy isolated dependencies from builder stage
 COPY --from=builder /root/.local /home/appuser/.local
 COPY app/ /app/
 
