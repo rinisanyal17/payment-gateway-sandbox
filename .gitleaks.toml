@@ -1,6 +1,13 @@
 [title]
 description = "Gitleaks configuration for Payment Sandbox"
 
+[allowlist]
+description = "Ignore virtualenv and cache directories"
+paths = [
+    '''(^|/)venv/''',
+    '''(^/)\.pytest_cache/'''
+]
+
 [[rules]]
 description = "Generic API Secret Token"
 id = "generic-api-key"
